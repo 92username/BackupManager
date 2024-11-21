@@ -99,6 +99,3 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ---
 If you find this project helpful, please consider giving it a star! 
-```
-
-Adicione esse conteúdo ao seu repositório e substitua informações como o link do perfil ou a licença, caso necessário. Se precisar de alterações ou melhorias, é só avisar! 🚀
