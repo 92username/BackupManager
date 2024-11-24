@@ -32,7 +32,7 @@ Ele oferece uma interface simples e eficiente para realizar backups manuais ou a
 
 3. Torne o script executável:
    ```bash
-   chmod +x backup.sh
+   chmod +x schedule_backup.sh
    ```
 
 ## 📋 Como Usar
@@ -40,7 +40,7 @@ Ele oferece uma interface simples e eficiente para realizar backups manuais ou a
 Execute o script no terminal:
 
 ```bash
-./backup.sh
+./schedule_backup.sh
 ```
 
 ### Menu de Opções
