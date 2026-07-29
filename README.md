@@ -61,11 +61,12 @@ Execute o script no terminal:
 O backup será salvo como um arquivo `.tar.gz` no local especificado.
 
 ### Configurando um Backup Automático
-1. Escolha a opção **2. Configurar Agendamento**.
-2. Insira o horário no formato `HH:MM`.
-3. Insira o diretório/arquivo de origem e o destino.
+1. Escolha a opção **2. Configurar agendamento**.
+2. Informe a regularidade em dias.
+3. Pressione `Enter` para usar o horário padrão `02:00` ou informe um horário no formato `HH:MM`.
+4. Insira o diretório/arquivo de origem e o destino.
 
-O script adicionará automaticamente a tarefa ao `cron`.
+O script adicionará automaticamente uma tarefa ao `cron` e controlará a execução recorrente de acordo com a regularidade em dias informada.
 
 ## 📝 Logs de Backups
 
@@ -89,13 +90,3 @@ Os backups realizados são registrados no arquivo `~/backup.log`, contendo:
 - Apenas caminhos válidos são aceitos como origem e destino.
 - Dependente do `cron` para agendamento.
 
-## 🤝 Contribuição
-
-Sinta-se à vontade para enviar sugestões ou abrir um pull request. Toda ajuda é bem-vinda!
-
-## 🛡️ Licença
-
-Este projeto está licenciado sob a [MIT License](LICENSE).
-
----
-If you find this project helpful, please consider giving it a star! 
