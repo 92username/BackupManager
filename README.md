@@ -46,9 +46,10 @@ Execute o script no terminal:
 ### Menu de Opções
 
 1. **Fazer Backup Agora**: Solicita o diretório/arquivo de origem, o destino (com padrão em `~/backups`) e o nome do backup.
-2. **Configurar Agendamento**: Configura um horário específico para backups automáticos.
-3. **Exibir Logs de Backups**: Mostra os backups realizados anteriormente.
-4. **Sair**: Encerra o programa.
+2. **Configurar Agendamento**: Cria um novo agendamento recorrente e permite manter, substituir um existente ou substituir todos.
+3. **Listar Agendamentos**: Exibe todos os agendamentos ativos com origem, destino, regularidade e horário.
+4. **Remover Agendamento**: Remove um agendamento específico.
+5. **Sair**: Encerra o programa.
 
 ## 📖 Exemplo de Uso
 
@@ -67,6 +68,11 @@ O backup será salvo como um arquivo `.tar.gz` no local especificado.
 4. Pressione `Enter` para usar o destino padrão `~/backups` ou informe outro caminho.
 
 O script adicionará automaticamente uma tarefa ao `cron` e controlará a execução recorrente de acordo com a regularidade em dias informada.
+
+Se ja existirem agendamentos ativos, o app oferece tres opcoes:
+- Manter os agendamentos atuais e adicionar um novo.
+- Remover um agendamento especifico e criar o novo.
+- Remover todos os agendamentos e criar o novo.
 
 ## 📝 Logs de Backups
 

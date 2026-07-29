@@ -32,6 +32,136 @@ registrar_log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $mensagem" >> "$LOG_FILE"
 }
 
+obter_agendamentos_ids() {
+    local arquivo
+
+    shopt -s nullglob
+    for arquivo in "$STATE_DIR"/*.conf; do
+        basename "$arquivo" .conf
+    done
+    shopt -u nullglob
+}
+
+carregar_agendamento() {
+    local run_id="$1"
+    local schedule_file="$STATE_DIR/${run_id}.conf"
+
+    if [ ! -f "$schedule_file" ]; then
+        return 1
+    fi
+
+    # shellcheck disable=SC1090
+    source "$schedule_file"
+    return 0
+}
+
+remover_entrada_cron() {
+    local run_id="$1"
+    local tmp_file
+
+    tmp_file=$(mktemp)
+    crontab -l 2>/dev/null | grep -Fv -- "--run-scheduled \"$run_id\"" > "$tmp_file" || true
+    crontab "$tmp_file"
+    rm -f "$tmp_file"
+}
+
+remover_agendamento_por_id() {
+    local run_id="$1"
+    local schedule_file="$STATE_DIR/${run_id}.conf"
+    local last_run_file="$STATE_DIR/${run_id}.last_run"
+
+    if ! carregar_agendamento "$run_id"; then
+        echo "Agendamento nao encontrado: $run_id"
+        return 1
+    fi
+
+    remover_entrada_cron "$run_id"
+    rm -f "$schedule_file" "$last_run_file"
+    registrar_log "Agendamento removido ($run_id): $ORIGEM -> $DESTINO"
+    return 0
+}
+
+listar_agendamentos() {
+    local ids
+    local run_id
+    local count=0
+
+    mapfile -t ids < <(obter_agendamentos_ids)
+
+    if [ "${#ids[@]}" -eq 0 ]; then
+        echo "Nenhum agendamento configurado."
+        return 0
+    fi
+
+    echo "Agendamentos ativos:"
+    for run_id in "${ids[@]}"; do
+        if carregar_agendamento "$run_id"; then
+            count=$((count + 1))
+            echo "$count. ID: $run_id"
+            echo "   Origem: $ORIGEM"
+            echo "   Destino: $DESTINO"
+            echo "   Nome base: $NOME"
+            echo "   Regularidade: a cada $REGULARIDADE_DIAS dia(s)"
+            echo "   Horario: $HORARIO"
+        fi
+    done
+}
+
+remover_agendamento_interativo() {
+    local ids
+    local escolha
+    local indice
+    local run_id
+
+    mapfile -t ids < <(obter_agendamentos_ids)
+
+    if [ "${#ids[@]}" -eq 0 ]; then
+        echo "Nenhum agendamento configurado para remover."
+        return 0
+    fi
+
+    listar_agendamentos
+    echo "Informe o numero do agendamento que deseja remover:"
+    read -r escolha
+
+    if [[ ! "$escolha" =~ ^[1-9][0-9]*$ ]]; then
+        echo "Opcao invalida."
+        return 1
+    fi
+
+    indice=$((escolha - 1))
+
+    if [ "$indice" -lt 0 ] || [ "$indice" -ge "${#ids[@]}" ]; then
+        echo "Opcao invalida."
+        return 1
+    fi
+
+    run_id="${ids[$indice]}"
+
+    if remover_agendamento_por_id "$run_id"; then
+        echo "Agendamento removido com sucesso."
+        return 0
+    fi
+
+    echo "Nao foi possivel remover o agendamento."
+    return 1
+}
+
+remover_todos_agendamentos() {
+    local ids
+    local run_id
+
+    mapfile -t ids < <(obter_agendamentos_ids)
+
+    if [ "${#ids[@]}" -eq 0 ]; then
+        return 0
+    fi
+
+    for run_id in "${ids[@]}"; do
+        remover_agendamento_por_id "$run_id" >/dev/null
+    done
+}
+
 executar_backup() {
     local origem="$1"
     local destino="$2"
@@ -63,19 +193,15 @@ executar_backup() {
 
 executar_agendamento() {
     local run_id="$1"
-    local schedule_file="$STATE_DIR/${run_id}.conf"
     local last_run_file="$STATE_DIR/${run_id}.last_run"
     local hoje
     local ultimo_dia
     local diferenca
 
-    if [ ! -f "$schedule_file" ]; then
+    if ! carregar_agendamento "$run_id"; then
         registrar_log "Falha no agendamento ($run_id): configuracao nao encontrada."
         exit 1
     fi
-
-    # shellcheck disable=SC1090
-    source "$schedule_file"
 
     hoje=$(date +%s)
 
@@ -144,8 +270,52 @@ configurar_agendamento() {
     local run_id
     local schedule_file
     local cron_cmd
+    local ids
+    local acao
+    local escolha
+    local indice
 
     echo "Configurar agendamento de backup."
+
+    mapfile -t ids < <(obter_agendamentos_ids)
+    if [ "${#ids[@]}" -gt 0 ]; then
+        echo "Ja existem agendamentos ativos."
+        listar_agendamentos
+        echo "Escolha como deseja continuar:"
+        echo "1. Manter os agendamentos atuais e adicionar um novo"
+        echo "2. Remover um agendamento existente e criar o novo"
+        echo "3. Remover todos os agendamentos e criar o novo"
+        read -r acao
+
+        case "$acao" in
+            1) ;;
+            2)
+                echo "Informe o numero do agendamento que deseja substituir:"
+                read -r escolha
+
+                if [[ ! "$escolha" =~ ^[1-9][0-9]*$ ]]; then
+                    echo "Opcao invalida."
+                    return 1
+                fi
+
+                indice=$((escolha - 1))
+                if [ "$indice" -lt 0 ] || [ "$indice" -ge "${#ids[@]}" ]; then
+                    echo "Opcao invalida."
+                    return 1
+                fi
+
+                remover_agendamento_por_id "${ids[$indice]}" || return 1
+                ;;
+            3)
+                remover_todos_agendamentos
+                ;;
+            *)
+                echo "Opcao invalida."
+                return 1
+                ;;
+        esac
+    fi
+
     echo "Informe a regularidade em dias:"
     read -r regularidade
 
@@ -200,13 +370,17 @@ while true; do
     echo "Escolha uma opcao:"
     echo "1. Fazer backup agora"
     echo "2. Configurar agendamento"
-    echo "3. Sair"
+    echo "3. Listar agendamentos"
+    echo "4. Remover agendamento"
+    echo "5. Sair"
     read -r OPCAO
 
     case $OPCAO in
         1) fazer_backup ;;
         2) configurar_agendamento ;;
-        3) echo "Saindo..."; exit 0 ;;
+        3) listar_agendamentos ;;
+        4) remover_agendamento_interativo ;;
+        5) echo "Saindo..."; exit 0 ;;
         *) echo "Opcao invalida." ;;
     esac
 done
