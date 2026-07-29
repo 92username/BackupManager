@@ -45,7 +45,7 @@ Execute o script no terminal:
 
 ### Menu de Opções
 
-1. **Fazer Backup Agora**: Solicita o diretório/arquivo de origem, o destino e o nome do backup.
+1. **Fazer Backup Agora**: Solicita o diretório/arquivo de origem, o destino (com padrão em `~/backups`) e o nome do backup.
 2. **Configurar Agendamento**: Configura um horário específico para backups automáticos.
 3. **Exibir Logs de Backups**: Mostra os backups realizados anteriormente.
 4. **Sair**: Encerra o programa.
@@ -55,7 +55,7 @@ Execute o script no terminal:
 ### Realizando um Backup Manual
 1. Escolha a opção **1. Fazer Backup Agora**.
 2. Insira o caminho do arquivo ou diretório a ser salvo.
-3. Insira o caminho de destino.
+3. Pressione `Enter` para usar o destino padrão `~/backups` ou informe outro caminho.
 4. Insira o nome do arquivo de backup ou pressione `Enter` para usar o padrão.
 
 O backup será salvo como um arquivo `.tar.gz` no local especificado.
@@ -64,7 +64,7 @@ O backup será salvo como um arquivo `.tar.gz` no local especificado.
 1. Escolha a opção **2. Configurar agendamento**.
 2. Informe a regularidade em dias.
 3. Pressione `Enter` para usar o horário padrão `02:00` ou informe um horário no formato `HH:MM`.
-4. Insira o diretório/arquivo de origem e o destino.
+4. Pressione `Enter` para usar o destino padrão `~/backups` ou informe outro caminho.
 
 O script adicionará automaticamente uma tarefa ao `cron` e controlará a execução recorrente de acordo com a regularidade em dias informada.
 
@@ -87,6 +87,4 @@ Os backups realizados são registrados no arquivo `~/backup.log`, contendo:
 
 ## 🐛 Problemas Conhecidos
 
-- Apenas caminhos válidos são aceitos como origem e destino.
 - Dependente do `cron` para agendamento.
-

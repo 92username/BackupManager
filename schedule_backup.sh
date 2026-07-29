@@ -3,6 +3,7 @@
 SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 STATE_DIR="$HOME/.backup_manager"
 LOG_FILE="$HOME/backup.log"
+DEFAULT_BACKUP_DIR="$HOME/backups"
 
 mkdir -p "$STATE_DIR"
 
@@ -111,8 +112,13 @@ coletar_dados_backup() {
         return 1
     fi
 
-    echo "Digite o caminho de destino do backup: Exemplo: /caminho/completo/do/diretorio"
+    echo "Digite o caminho de destino do backup [padrao: $DEFAULT_BACKUP_DIR]."
+    echo "Pressione Enter para usar o padrao:"
     read -r DESTINO
+
+    if [ -z "$DESTINO" ]; then
+        DESTINO="$DEFAULT_BACKUP_DIR"
+    fi
 
     echo "Digite o nome do arquivo de backup (sem extensao). Pressione Enter para usar o padrao:"
     read -r NOME
